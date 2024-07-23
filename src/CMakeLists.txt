@@ -70,6 +70,7 @@ set (lib_common_SRCS
 ./iec61850/server/model/dynamic_model.c
 ./iec61850/server/model/cdc.c
 ./iec61850/server/model/config_file_parser.c
+./iec61850/server/model/cid_file_parser.c
 ./iec61850/server/mms_mapping/control.c
 ./iec61850/server/mms_mapping/mms_mapping.c
 ./iec61850/server/mms_mapping/reporting.c
@@ -345,6 +346,25 @@ target_link_libraries(iec61850-shared
 )
 
 ENDIF(WITH_WPCAP)
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/mxml")
+	message("Found MiniXML -> can compile with CID model support")
+	set(WITH_MXML 1)
+	set(MXML_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/mxml/mxml-4.0.3/include)
+	set(MXML_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/mxml/mxml-4.0.3/library)
+endif()
+
+IF(WITH_MXML)
+include_directories(${MXML_INCLUDE_DIR})
+link_directories(${MXML_LIBRARY})
+target_link_libraries(iec61850 ${MXML_LIBRARY}/libmxml4.a)
+	IF(APPLE)
+	target_link_libraries(iec61850-shared ${MXML_LIBRARY}/libmxml4.dynlib)
+	ELSEIF(UNIX)
+	target_link_libraries(iec61850-shared ${MXML_LIBRARY}/libmxml4.so)
+	ENDIF(APPLE)
+ENDIF(WITH_MXML)
+
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
   configure_file(Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
